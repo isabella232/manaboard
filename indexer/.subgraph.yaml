@@ -1,0 +1,31 @@
+specVersion: 0.0.1
+description: Decentraland's Manaboard
+repository: https://github.com/eordano/manaboard
+schema:
+  file: ./schema.graphql
+dataSources:
+  # ---------------------------------------------------------
+  # MANA ----------------------------------------------------
+  # ---------------------------------------------------------
+  - kind: ethereum/contract
+    name: MANAToken
+    network: {{network}}
+    source:
+      address: '{{address:MANAToken}}'
+      abi: MANAToken
+      startBlock: {{startBlock:MANAToken}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.3
+      language: wasm/assemblyscript
+      file: ./src/handlers/manaToken.ts
+      entities:
+        - TimeSummary
+      abis:
+        - name: MANAToken
+          file: ./abis/MANAToken.json
+      eventHandlers:
+        - event: Mint(indexed address,uint256)
+          handler: handleMint
+        - event: Burn(indexed address,uint256)
+          handler: handleBurn
