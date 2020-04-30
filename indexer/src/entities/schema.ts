@@ -12,73 +12,6 @@ import {
   BigDecimal
 } from "@graphprotocol/graph-ts";
 
-export class TimeSummary extends Entity {
-  constructor(id: string) {
-    super();
-    this.set("id", Value.fromString(id));
-  }
-
-  save(): void {
-    let id = this.get("id");
-    assert(id !== null, "Cannot save TimeSummary entity without an ID");
-    assert(
-      id.kind == ValueKind.STRING,
-      "Cannot save TimeSummary entity with non-string ID. " +
-        'Considering using .toHex() to convert the "id" to a string.'
-    );
-    store.set("TimeSummary", id.toString(), this);
-  }
-
-  static load(id: string): TimeSummary | null {
-    return store.get("TimeSummary", id) as TimeSummary | null;
-  }
-
-  get id(): string {
-    let value = this.get("id");
-    return value.toString();
-  }
-
-  set id(value: string) {
-    this.set("id", Value.fromString(value));
-  }
-
-  get timestamp(): BigInt {
-    let value = this.get("timestamp");
-    return value.toBigInt();
-  }
-
-  set timestamp(value: BigInt) {
-    this.set("timestamp", Value.fromBigInt(value));
-  }
-
-  get granularity(): string {
-    let value = this.get("granularity");
-    return value.toString();
-  }
-
-  set granularity(value: string) {
-    this.set("granularity", Value.fromString(value));
-  }
-
-  get supply(): BigInt {
-    let value = this.get("supply");
-    return value.toBigInt();
-  }
-
-  set supply(value: BigInt) {
-    this.set("supply", Value.fromBigInt(value));
-  }
-
-  get burned(): BigInt {
-    let value = this.get("burned");
-    return value.toBigInt();
-  }
-
-  set burned(value: BigInt) {
-    this.set("burned", Value.fromBigInt(value));
-  }
-}
-
 export class Latest extends Entity {
   constructor(id: string) {
     super();
@@ -109,21 +42,37 @@ export class Latest extends Entity {
     this.set("id", Value.fromString(value));
   }
 
-  get supply(): BigInt {
+  get supply(): BigInt | null {
     let value = this.get("supply");
-    return value.toBigInt();
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
   }
 
-  set supply(value: BigInt) {
-    this.set("supply", Value.fromBigInt(value));
+  set supply(value: BigInt | null) {
+    if (value === null) {
+      this.unset("supply");
+    } else {
+      this.set("supply", Value.fromBigInt(value as BigInt));
+    }
   }
 
-  get burned(): BigInt {
+  get burned(): BigInt | null {
     let value = this.get("burned");
-    return value.toBigInt();
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
   }
 
-  set burned(value: BigInt) {
-    this.set("burned", Value.fromBigInt(value));
+  set burned(value: BigInt | null) {
+    if (value === null) {
+      this.unset("burned");
+    } else {
+      this.set("burned", Value.fromBigInt(value as BigInt));
+    }
   }
 }

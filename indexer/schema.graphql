@@ -1,13 +1,13 @@
 type TimeSummary @entity {
   id: ID!
-  timestamp: BigInt!
-  granularity: String!
-  supply: BigInt!
-  burned: BigInt!
+  timestamp: BigInt
+  granularity: String
+  supply: BigInt
+  burned: BigInt
 }
 
 type Latest @entity {
   id: ID!
-  supply: BigInt!
-  burned: BigInt!
+  supply: BigInt
+  burned: BigInt
 }

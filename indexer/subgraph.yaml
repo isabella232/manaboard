@@ -9,18 +9,18 @@ dataSources:
   # ---------------------------------------------------------
   - kind: ethereum/contract
     name: MANAToken
-    network: ropsten
+    network: mainnet
     source:
-      address: '0x2a8fd99c19271f4f04b1b7b9c4f7cf264b626edb'
+      address: '0x0f5d2fb29fb7d3cfee444a200298f468908cc942'
       abi: MANAToken
-      startBlock: 1891200
+      startBlock: 4162050
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.3
       language: wasm/assemblyscript
       file: ./src/handlers/manaToken.ts
       entities:
-        - TimeSummary
+        - Latest
       abis:
         - name: MANAToken
           file: ./abis/MANAToken.json
