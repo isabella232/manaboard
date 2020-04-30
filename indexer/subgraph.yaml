@@ -21,6 +21,7 @@ dataSources:
       file: ./src/handlers/manaToken.ts
       entities:
         - Latest
+        - TimeSummary
       abis:
         - name: MANAToken
           file: ./abis/MANAToken.json

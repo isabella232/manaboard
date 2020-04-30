@@ -1,3 +1,9 @@
+type TimeSummary @entity {
+  id: ID!
+  timestamp: BigInt
+  burned: BigInt
+}
+
 type Latest @entity {
   id: ID!
   supply: BigInt

@@ -18,6 +18,7 @@ dataSources:
       file: MANAToken/MANAToken.wasm
       entities:
         - Latest
+        - TimeSummary
       abis:
         - name: MANAToken
           file: MANAToken/abis/MANAToken.json

@@ -12,6 +12,71 @@ import {
   BigDecimal
 } from "@graphprotocol/graph-ts";
 
+export class TimeSummary extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save TimeSummary entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save TimeSummary entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("TimeSummary", id.toString(), this);
+  }
+
+  static load(id: string): TimeSummary | null {
+    return store.get("TimeSummary", id) as TimeSummary | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get timestamp(): BigInt | null {
+    let value = this.get("timestamp");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set timestamp(value: BigInt | null) {
+    if (value === null) {
+      this.unset("timestamp");
+    } else {
+      this.set("timestamp", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get burned(): BigInt | null {
+    let value = this.get("burned");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set burned(value: BigInt | null) {
+    if (value === null) {
+      this.unset("burned");
+    } else {
+      this.set("burned", Value.fromBigInt(value as BigInt));
+    }
+  }
+}
+
 export class Latest extends Entity {
   constructor(id: string) {
     super();

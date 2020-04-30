@@ -57,7 +57,7 @@ async function build() {
       currentDay = new Date(firstDay.getTime())
       currentOffset = day
     }
-    days.push(new Date(currentDay).getTime())
+    days.push(Math.floor(new Date(currentDay).getTime() / 1000))
   }
   days.sort()
   fs.writeFileSync(basePath + '/src/data/days.ts', `export const days: i64[] = [\n  ${days.join(',\n  ')}\n];`)
