@@ -27,32 +27,38 @@ function niceNumber(n: number): string {
 }
 
 function App() {
+  const [timeSummary, setTimeSummary] = useState(
+    [] as { burned: string; timestamp: string }[]
+  );
   const [latest, setLatest] = useState({
     burned: "607967028124150287041826048",
     supply: "2197919365034152513924741837",
   });
   useEffect(() => {
-    fetch(
-      "https://api.thegraph.com/subgraphs/id/Qmf3fC4798hjXmTZFnbvaPVeBWcZbQ6Dd3EMPUbwLCcewk",
-      {
-        headers: {
-          "content-type": "application/json",
-        },
-        body:
-          '{"query":"{\\n  latest(id:\\"0x01\\") {\\n    id\\n    supply\\n    burned\\n  }\\n}\\n","variables":null}',
-        method: "POST",
-        mode: "cors",
-        credentials: "omit",
-      }
-    )
+    fetch("https://api.thegraph.com/subgraphs/name/eordano/manaboard", {
+      headers: {
+        "content-type": "application/json",
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-site",
+      },
+      body:
+        '{"query":"{\\n  timeSummaries(first: 500\\n) {\\n    id\\n    timestamp\\n    burned\\n  }\\n  latests(first: 5) {\\n    id\\n    supply\\n    burned\\n  }\\n}\\n","variables":null}',
+      method: "POST",
+      mode: "cors",
+      credentials: "omit",
+    })
       .then((res) => res.json())
-      .then((res) => setLatest((res as any).data.latest));
+      .then((res) => {
+        setLatest((res as any).data.latests[0]);
+        setTimeSummary((res as any).data.timeSummaries);
+      });
   }, []);
   const { burned, supply } = latest;
   const total = +burned / 1e18 + +supply / 1e18;
   const percent = (+burned * 100) / 1e18 / total;
-  const minTablet = 650
-  const minDesktop = 920
+  const minTablet = 650;
+  const minDesktop = 920;
   return (
     <div className="container">
       <Navbar isFullscreen />
@@ -77,17 +83,17 @@ function App() {
         <Container>
           <Responsive maxWidth={minTablet}>
             <Grid columns="1" centered>
-              {Content()}
+              {Content(timeSummary)}
             </Grid>
           </Responsive>
-          <Responsive minWidth={minTablet+ 1} maxWidth={minDesktop- 1}>
+          <Responsive minWidth={minTablet + 1} maxWidth={minDesktop - 1}>
             <Grid columns="2" centered>
-              {Content()}
+              {Content(timeSummary)}
             </Grid>
           </Responsive>
           <Responsive minWidth={minDesktop}>
             <Grid columns="3" centered>
-              {Content()}
+              {Content(timeSummary)}
             </Grid>
           </Responsive>
         </Container>
@@ -98,7 +104,7 @@ function App() {
   );
 }
 
-function Content() {
+function Content(latest: any) {
   return (
     <>
       {MakeCard(
@@ -113,11 +119,15 @@ function Content() {
         "What are the consequences?",
         "The less mana there is, the more valuable each token becomes. Any marginal demand for MANA would cause an increase in the MANA price, leading to an appreciation of the token."
       )}
+      {MakeCard(
+        "What are the consequences?",
+        <pre>{JSON.stringify(latest, null, 2)} </pre>
+      )}
     </>
   );
 }
 
-function MakeCard(title: string, text: string) {
+function MakeCard(title: string, content: any) {
   return (
     <Grid.Column>
       <Card fluid>
@@ -126,7 +136,7 @@ function MakeCard(title: string, text: string) {
             <h3>{title}</h3>
           </Card.Header>
           <Card.Meta>
-            <p>{text}</p>
+            {typeof content === "string" ? <p>{content}</p> : content}
           </Card.Meta>
         </Card.Content>
       </Card>
