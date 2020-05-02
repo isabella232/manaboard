@@ -1,18 +1,20 @@
 import {
+  Card,
   Center,
+  Container,
   Footer,
+  Grid,
   Header,
+  Hero,
   Navbar,
   Page,
   Progress,
-  Container,
-  Grid,
-  Card,
-  Hero,
   Responsive,
 } from "decentraland-ui";
 import "decentraland-ui/lib/styles.css";
 import React, { useEffect, useState } from "react";
+
+import { Line } from "react-chartjs-2";
 
 function niceNumber(n: number): string {
   const parts = [];
@@ -64,7 +66,7 @@ function App() {
       <Navbar isFullscreen />
       <Page isFullscreen>
         <Hero>
-          <div style={{ height: "200px" }}>&nbsp;</div>
+          <div style={{ height: "400px" }}>&nbsp;</div>
           <Center>
             <Header size="huge">{niceNumber(+burned / 1e18)}</Header>
             <p>
@@ -78,11 +80,25 @@ function App() {
                 success={true}
               />
             </p>
+            <Header size="huge">{niceNumber(1370172956)}</Header>
+            <p>
+              Circulating out of the {niceNumber(+supply / 1e18)} current total
+              supply
+              <Progress
+                precision={2}
+                value={1370172956}
+                total={+supply / 1e18}
+                style={{ marginTop: "20px" }}
+                indicating={true}
+                success={true}
+              />
+            </p>
           </Center>
         </Hero>
         <Container>
           <Responsive maxWidth={minTablet}>
             <Grid columns="1" centered>
+              {MakeCard("MANA Burned", percent)}
               {Content(timeSummary)}
             </Grid>
           </Responsive>
@@ -105,6 +121,57 @@ function App() {
 }
 
 function Content(latest: any) {
+  const now = new Date().getTime();
+  const MILLIS_IN_SECOND = 1000;
+  const SECONDS_IN_MINUTE = 60;
+  const MINUTE_IN_HOURS = 60;
+  const HOURS_IN_DAYS = 24;
+  const DAYS_IN_TWO_WEEKS = 14;
+  const TWO_WEEKS =
+    MILLIS_IN_SECOND *
+    SECONDS_IN_MINUTE *
+    MINUTE_IN_HOURS *
+    HOURS_IN_DAYS *
+    DAYS_IN_TWO_WEEKS;
+  if (!latest.length) {
+    console.log('asdas')
+    latest = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].map((_, index) => ({burned: '' + Math.random() * 100000000000000, timestamp: index * 15456456000}));
+  }
+  const graphValues = latest
+    // .filter(
+    //   (_: any) => now - new Date(+_.timestamp * 1000).getTime() < TWO_WEEKS
+    // )
+    .sort((_: any, $: any) => +_.timestamp - +$.timestamp)
+    .map((_: any) => [
+      +_.burned / 1e18,
+      new Date(+_.timestamp * 1000).toISOString().slice(0, 10),
+    ]);
+  const data = {
+    labels: graphValues.map((_: any) => _[1]),
+    datasets: [
+      {
+        label: "Marketplace Volume (MANA)",
+        fill: false,
+        lineTension: 0.1,
+        backgroundColor: "rgba(75,192,192,0.4)",
+        borderColor: "rgba(75,192,192,1)",
+        borderCapStyle: "butt",
+        borderDash: [],
+        borderDashOffset: 0.0,
+        borderJoinStyle: "miter",
+        pointBorderColor: "rgba(75,192,192,1)",
+        pointBackgroundColor: "#fff",
+        pointBorderWidth: 1,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: "rgba(75,192,192,1)",
+        pointHoverBorderColor: "rgba(220,220,220,1)",
+        pointHoverBorderWidth: 2,
+        pointRadius: 1,
+        pointHitRadius: 10,
+        data: graphValues.map((_: any) => _[0]),
+      },
+    ],
+  };
   return (
     <>
       {MakeCard(
@@ -119,10 +186,38 @@ function Content(latest: any) {
         "What are the consequences?",
         "The less mana there is, the more valuable each token becomes. Any marginal demand for MANA would cause an increase in the MANA price, leading to an appreciation of the token."
       )}
-      {MakeCard(
-        "What are the consequences?",
-        <pre>{JSON.stringify(latest, null, 2)} </pre>
-      )}
+      <Grid.Column width={16}>
+        <Card fluid>
+          <Card.Content>
+            <Card.Header>
+              <h3>Graphs</h3>
+            </Card.Header>
+            <Card.Meta>
+              <form>
+                <select>
+                  <option>All assets</option>
+                  <option>LAND + Estates</option>
+                  <option>Wearables</option>
+                  <option>Names</option>
+                  <option>Other assets</option>
+                </select>
+                <select>
+                  <option>Per day</option>
+                  <option>Per week</option>
+                  <option>Per month</option>
+                </select>
+                <select>
+                  <option>Options</option>
+                  <option>Show marketplace volume value</option>
+                  <option>Show burned MANA value</option>
+                  <option>Show values in USD</option>
+                </select>
+              </form>
+              <Line data={data} />
+            </Card.Meta>
+          </Card.Content>
+        </Card>
+      </Grid.Column>
     </>
   );
 }
