@@ -117,7 +117,6 @@ class Ethereum {
       this.contractAddresses[this.getProxyContractName(contractName)] ||
       this.overrides[contractName] ||
       this.getDefaultAddress();
-    console.log(`Using ${result} for ${contractName}`);
     return result;
   }
 

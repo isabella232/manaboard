@@ -206,6 +206,23 @@ export class VoteSummary extends Entity {
     }
   }
 
+  get accumulated(): BigInt | null {
+    let value = this.get("accumulated");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set accumulated(value: BigInt | null) {
+    if (value === null) {
+      this.unset("accumulated");
+    } else {
+      this.set("accumulated", Value.fromBigInt(value as BigInt));
+    }
+  }
+
   get votes(): BigInt | null {
     let value = this.get("votes");
     if (value === null) {
