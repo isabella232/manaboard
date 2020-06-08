@@ -8,4 +8,12 @@ type Latest @entity {
   id: ID!
   supply: BigInt
   burned: BigInt
+  votes: BigInt
 }
+
+type VoteSummary @entity {
+  id: ID!
+  timestamp: BigInt
+  votes: BigInt
+}
+

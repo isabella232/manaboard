@@ -5,6 +5,30 @@ schema:
   file: ./schema.graphql
 dataSources:
   # ---------------------------------------------------------
+  # Voting --------------------------------------------------
+  # ---------------------------------------------------------
+  - kind: ethereum/contract
+    name: Voting
+    network: {{network}}
+    source:
+      address: '{{address:Voting}}'
+      abi: Voting
+      startBlock: {{startBlock:Voting}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.3
+      language: wasm/assemblyscript
+      file: ./src/handlers/voting.ts
+      entities:
+        - Latest
+        - VoteSummary
+      abis:
+        - name: Voting
+          file: ./abis/Voting.json
+      eventHandlers:
+        - event: CastVote(indexed uint256,indexed address,bool,uint256)
+          handler: handleVote
+  # ---------------------------------------------------------
   # MANA ----------------------------------------------------
   # ---------------------------------------------------------
   - kind: ethereum/contract

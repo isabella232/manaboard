@@ -140,4 +140,86 @@ export class Latest extends Entity {
       this.set("burned", Value.fromBigInt(value as BigInt));
     }
   }
+
+  get votes(): BigInt | null {
+    let value = this.get("votes");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set votes(value: BigInt | null) {
+    if (value === null) {
+      this.unset("votes");
+    } else {
+      this.set("votes", Value.fromBigInt(value as BigInt));
+    }
+  }
+}
+
+export class VoteSummary extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save VoteSummary entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save VoteSummary entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("VoteSummary", id.toString(), this);
+  }
+
+  static load(id: string): VoteSummary | null {
+    return store.get("VoteSummary", id) as VoteSummary | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get timestamp(): BigInt | null {
+    let value = this.get("timestamp");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set timestamp(value: BigInt | null) {
+    if (value === null) {
+      this.unset("timestamp");
+    } else {
+      this.set("timestamp", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get votes(): BigInt | null {
+    let value = this.get("votes");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set votes(value: BigInt | null) {
+    if (value === null) {
+      this.unset("votes");
+    } else {
+      this.set("votes", Value.fromBigInt(value as BigInt));
+    }
+  }
 }
