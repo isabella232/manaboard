@@ -4,12 +4,11 @@ import { VoteSummary } from "../entities/schema";
 import { CastVote } from "../entities/Voting/Voting";
 import { getLatest } from "./getLatest";
 
-const ZERO = BigInt.fromI32(0)
-const ONE = BigInt.fromI32(1)
 
 export function handleVote(event: CastVote): void {
+  let ONE = BigInt.fromI32(1)
   let last = getLatest();
-  last.burned = last.burned.plus(ONE);
+  last.votes = last.votes.plus(ONE);
 
   let summary = getDailySummary(event.block.timestamp);
   summary.votes = summary.votes.plus(ONE);
@@ -31,14 +30,14 @@ function getStart(time: i64, from: i32, to: i32): i64 {
 }
 
 export function getDailySummary(timestamp: BigInt): VoteSummary {
+  let ZERO = BigInt.fromI32(0)
   let day = BigInt.fromI32(
     getStart(timestamp.toI32() as i64, 0 as i32, days.length as i32) as i32
   );
-  let id = "day-" + day.toString();
+  let id = "vot-" + day.toString();
   let summary = VoteSummary.load(id);
   if (summary == null) {
     summary = new VoteSummary(id);
-    let latest = getLatest();
     summary.votes = ZERO
     summary.timestamp = day;
   } else {

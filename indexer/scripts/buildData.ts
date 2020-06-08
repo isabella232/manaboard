@@ -1,66 +1,72 @@
-import * as https from 'https'
-import * as url from 'url'
-import * as fs from 'fs'
-import * as path from 'path'
+import * as https from "https";
+import * as url from "url";
+import * as fs from "fs";
+import * as path from "path";
 
 enum Network {
-  MAINNET = 'mainnet',
-  ROPSTEN = 'ropsten'
+  MAINNET = "mainnet",
+  ROPSTEN = "ropsten",
 }
 enum ContractName {
-  MANAToken = 'MANAToken',
+  MANAToken = "MANAToken",
+  Voting = "Voting",
 }
-type ContractsResponse = Record<Network, Record<ContractName, string>>
+type ContractsResponse = Record<Network, Record<ContractName, string>>;
 
 const startBlockByNetwork: Record<Network, Record<ContractName, number>> = {
   [Network.MAINNET]: {
     MANAToken: 4162050,
+    Voting: 9352759,
   },
   [Network.ROPSTEN]: {
     MANAToken: 1891200,
-  }
-}
+    Voting: 9352759,
+  },
+};
 
 const contractNameToProxy: Record<string, ContractName> = {
   MANAToken: ContractName.MANAToken,
-}
+};
 
 // TODO: Handle ctrl+C
 async function build() {
-  const network = getNetwork()
-  const basePath = path.resolve(__dirname, '../')
+  const network = getNetwork();
+  const basePath = path.resolve(__dirname, "../");
 
-  const ethereum = new Ethereum(network)
-  await ethereum.fetchContracts()
+  const ethereum = new Ethereum(network);
+  await ethereum.fetchContracts();
 
-  const template = new TemplateFile(ethereum)
+  const template = new TemplateFile(ethereum);
 
   await Promise.all([
     template.write(
       `${basePath}/src/data/.addresses.ts`,
       `${basePath}/src/data/addresses.ts`
     ),
-    template.write(`${basePath}/.subgraph.yaml`, `${basePath}/subgraph.yaml`)
-  ])
+    template.write(`${basePath}/.subgraph.yaml`, `${basePath}/subgraph.yaml`),
+  ]);
 
-  let firstDay = new Date('2017-08-18T00:00:00.000Z')
-  let currentDay = new Date('2017-08-18T00:00:00.000Z')
-  let currentMonth = firstDay.getDate()
-  let currentOffset = 0
-  const days = []
+  let firstDay = new Date("2017-08-18T00:00:00.000Z");
+  let currentDay = new Date("2017-08-18T00:00:00.000Z");
+  let currentMonth = firstDay.getDate();
+  let currentOffset = 0;
+  const days = [];
   for (let day = 1; day < 365 * 10; day++) {
-    currentDay.setDate(day - currentOffset)
+    currentDay.setDate(day - currentOffset);
     if (currentDay.getMonth() !== firstDay.getMonth()) {
-      firstDay.setMonth(currentDay.getMonth())
-      firstDay.setFullYear(currentDay.getFullYear())
-      firstDay.setTime(new Date(firstDay.toISOString()).getTime())
-      currentDay = new Date(firstDay.getTime())
-      currentOffset = day
+      firstDay.setMonth(currentDay.getMonth());
+      firstDay.setFullYear(currentDay.getFullYear());
+      firstDay.setTime(new Date(firstDay.toISOString()).getTime());
+      currentDay = new Date(firstDay.getTime());
+      currentOffset = day;
     }
-    days.push(Math.floor(new Date(currentDay).getTime() / 1000))
+    days.push(Math.floor(new Date(currentDay).getTime() / 1000));
   }
-  days.sort()
-  fs.writeFileSync(basePath + '/src/data/days.ts', `export const days: i64[] = [\n  ${days.join(',\n  ')}\n];`)
+  days.sort();
+  fs.writeFileSync(
+    basePath + "/src/data/days.ts",
+    `export const days: i64[] = [\n  ${days.join(",\n  ")}\n];`
+  );
 }
 
 // ------------------------------------------------------------------
@@ -70,61 +76,68 @@ class TemplateFile {
   constructor(public ethereum: Ethereum) {}
 
   async write(src: string, destination: string) {
-    const contents = await readFile(src)
+    const contents = await readFile(src);
 
     try {
-      const newContents = new Parser(contents, this.ethereum).parse()
+      const newContents = new Parser(contents, this.ethereum).parse();
 
-      await writeFile(destination, newContents)
+      await writeFile(destination, newContents);
     } catch (error) {
-      await deleteFile(destination)
-      throw error
+      await deleteFile(destination);
+      throw error;
     }
   }
 }
 
 class Ethereum {
-  network: Network
+  network: Network;
 
-  contractAddresses: Record<ContractName, string>
-  startBlocks: Record<ContractName, number>
+  contractAddresses: Record<ContractName, string>;
+  startBlocks: Record<ContractName, number>;
+  overrides: Record<ContractName, string>;
 
   constructor(network: Network) {
-    this.network = network
-    this.startBlocks = startBlockByNetwork[network]
+    this.network = network;
+    this.startBlocks = startBlockByNetwork[network];
+    this.overrides = {
+      MANAToken: "0x0f5d2fb29fb7d3cfee444a200298f468908cc942",
+      Voting: "0x2aa9074caa11e30838caf681d34b981ffd025a8b",
+    };
   }
 
   async fetchContracts() {
     const contractsByNetwork: ContractsResponse = await fetch(
-      'https://contracts.decentraland.org/addresses.json'
-    )
-    this.contractAddresses = contractsByNetwork[this.network]
+      "https://contracts.decentraland.org/addresses.json"
+    );
+    this.contractAddresses = contractsByNetwork[this.network];
   }
 
   getAddress(contractName: string) {
-    return (
+    const result =
       this.contractAddresses[this.getProxyContractName(contractName)] ||
-      this.getDefaultAddress()
-    )
+      this.overrides[contractName] ||
+      this.getDefaultAddress();
+    console.log(`Using ${result} for ${contractName}`);
+    return result;
   }
 
   getStartBlock(contractName: string) {
     return (
       this.startBlocks[this.getProxyContractName(contractName)] ||
       this.getDefaultStartBlock()
-    )
+    );
   }
 
   private getProxyContractName(contractName: string) {
-    return contractNameToProxy[contractName] || contractName
+    return contractNameToProxy[contractName] || contractName;
   }
 
   private getDefaultAddress() {
-    return '0x0000000000000000000000000000000000000000'
+    return "0x0000000000000000000000000000000000000000";
   }
 
   private getDefaultStartBlock() {
-    return 0
+    return 0;
   }
 }
 
@@ -132,84 +145,84 @@ class Parser {
   constructor(public text: string, public ethereum: Ethereum) {}
 
   parse() {
-    let newText = this.replaceNetworks(this.text)
-    newText = this.replaceAddresses(newText)
-    newText = this.replaceStartBlocks(newText)
-    return newText
+    let newText = this.replaceNetworks(this.text);
+    newText = this.replaceAddresses(newText);
+    newText = this.replaceStartBlocks(newText);
+    return newText;
   }
 
   replaceAddresses(text = this.text) {
-    for (const placeholder of this.getPlaceholders('address')) {
-      const contractName = this.getPlaceholderValue(placeholder)
-      const address = this.ethereum.getAddress(contractName)
-      text = text.replace(placeholder, address)
+    for (const placeholder of this.getPlaceholders("address")) {
+      const contractName = this.getPlaceholderValue(placeholder);
+      const address = this.ethereum.getAddress(contractName);
+      text = text.replace(placeholder, address);
     }
-    return text
+    return text;
   }
 
   replaceStartBlocks(text = this.text) {
-    for (const placeholder of this.getPlaceholders('startBlock')) {
-      const contractName = this.getPlaceholderValue(placeholder)
-      const startBlock = this.ethereum.getStartBlock(contractName)
-      text = text.replace(placeholder, startBlock.toString())
+    for (const placeholder of this.getPlaceholders("startBlock")) {
+      const contractName = this.getPlaceholderValue(placeholder);
+      const startBlock = this.ethereum.getStartBlock(contractName);
+      text = text.replace(placeholder, startBlock.toString());
     }
-    return text
+    return text;
   }
 
   replaceNetworks(text = this.text) {
-    return text.replace(/{{network}}/g, this.ethereum.network)
+    return text.replace(/{{network}}/g, this.ethereum.network);
   }
 
   getPlaceholders(name: string, text = this.text) {
-    const regexp = new RegExp(`{{${name}\:[a-zA-Z0-9]+}}`, 'g')
-    return text.match(regexp) || []
+    const regexp = new RegExp(`{{${name}\:[a-zA-Z0-9]+}}`, "g");
+    return text.match(regexp) || [];
   }
 
   getPlaceholderValue(placeholder: string) {
     // Example: {{operator:value}}
-    const [_, value] = placeholder.replace(/{|}/g, '').split(':')
-    return value
+    const [_, value] = placeholder.replace(/{|}/g, "").split(":");
+    return value;
   }
 }
 
 // ------------------------------------------------------------------
 // HTTPS ------------------------------------------------------------
 
-async function fetch(uri: string, method = 'GET'): Promise<any> {
-  const { protocol, hostname, path } = url.parse(uri)
+async function fetch(uri: string, method = "GET"): Promise<any> {
+  const { protocol, hostname, path } = url.parse(uri);
 
-  if (protocol !== 'https:') {
-    throw new Error('Only https is supported')
+  if (protocol !== "https:") {
+    throw new Error("Only https is supported");
   }
 
   const options = {
     hostname,
     method,
     port: 443,
-    path
-  }
+    path,
+  };
   return new Promise(function(resolve, reject) {
     const req = https.request(options, function(res) {
       if (res.statusCode < 200 || res.statusCode >= 300) {
-        return reject(new Error(`Invalid request: ${res.statusCode}`))
+        return reject(new Error(`Invalid request: ${res.statusCode}`));
       }
 
-      let body = []
-      res.on('data', chunk => body.push(chunk))
+      let body = [];
+      res.on("data", (chunk) => body.push(chunk));
 
-      res.on('end', () => {
+      res.on("end", () => {
         try {
-          body = JSON.parse(Buffer.concat(body).toString())
-          resolve(body)
+          body = JSON.parse(Buffer.concat(body).toString());
+          resolve(body);
         } catch (e) {
-          reject(e)
+          reject(e);
         }
-      })
-    })
+      });
+    });
 
-    req.on('error', err => reject(err))
-    req.end()
-  })
+    req.on("error", (err) => reject(err));
+    req.end();
+  });
 }
 
 // ------------------------------------------------------------------
@@ -217,38 +230,38 @@ async function fetch(uri: string, method = 'GET'): Promise<any> {
 
 async function readFile(path: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    fs.readFile(path, 'utf-8', (err, data) =>
+    fs.readFile(path, "utf-8", (err, data) =>
       err ? reject(err) : resolve(data)
-    )
-  })
+    );
+  });
 }
 
 async function deleteFile(path: string): Promise<void> {
   return new Promise((resolve, reject) => {
     if (!fs.existsSync(path)) {
-      resolve()
+      resolve();
     }
-    fs.unlink(path, err => (err ? reject(err) : resolve()))
-  })
+    fs.unlink(path, (err) => (err ? reject(err) : resolve()));
+  });
 }
 
 async function writeFile(path: string, data: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    fs.writeFile(path, data, 'utf-8', err => (err ? reject(err) : resolve()))
-  })
+    fs.writeFile(path, data, "utf-8", (err) => (err ? reject(err) : resolve()));
+  });
 }
 
 // ------------------------------------------------------------------
 // Args -------------------------------------------------------------
 
 function getNetwork() {
-  let network: Network = process.env.ETHEREUM_NETWORK as Network
+  let network: Network = process.env.ETHEREUM_NETWORK as Network;
 
   if (!network) {
     for (let i = 0; i < process.argv.length; i++) {
-      if (process.argv[i] === '--network') {
-        network = process.argv[i + 1] as Network
-        break
+      if (process.argv[i] === "--network") {
+        network = process.argv[i + 1] as Network;
+        break;
       }
     }
   }
@@ -256,9 +269,9 @@ function getNetwork() {
   if (!network || !Object.values(Network).includes(network)) {
     throw new Error(
       "Supply a valid network using --network. Use `npm run build -- --network mainnet` if you're using npm"
-    )
+    );
   }
-  return network
+  return network;
 }
 
-build().then(() => console.log('All done'))
+build().then(() => console.log("All done"));
