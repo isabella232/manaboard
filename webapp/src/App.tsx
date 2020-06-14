@@ -121,18 +121,6 @@ function App() {
 }
 
 function Content(latest: any) {
-  const now = new Date().getTime();
-  const MILLIS_IN_SECOND = 1000;
-  const SECONDS_IN_MINUTE = 60;
-  const MINUTE_IN_HOURS = 60;
-  const HOURS_IN_DAYS = 24;
-  const DAYS_IN_TWO_WEEKS = 14;
-  const TWO_WEEKS =
-    MILLIS_IN_SECOND *
-    SECONDS_IN_MINUTE *
-    MINUTE_IN_HOURS *
-    HOURS_IN_DAYS *
-    DAYS_IN_TWO_WEEKS;
   if (!latest.length) {
     console.log('asdas')
     latest = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].map((_, index) => ({burned: '' + Math.random() * 100000000000000, timestamp: index * 15456456000}));
