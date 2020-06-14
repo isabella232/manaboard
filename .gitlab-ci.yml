@@ -3,7 +3,7 @@ image: decentraland/ci-node:latest
 build:
   script:
     - cd webapp
-    - npm install && npm run build
+    - yarn install && yarn run build
     - cd ..
     - dcl-lock-sync
     - cd .ci && npm install && dcl-up websites-landing
