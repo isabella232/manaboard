@@ -171,8 +171,8 @@ function Content(latest: any) {
         "Any activity on the marketplace charges a 2.5% fee on the sale (payed by the seller). This means that the amount of MANA burned is directly tied to the activity of the platform."
       )}
       {MakeCard(
-        "What are the consequences?",
-        "The less mana there is, the more valuable each token becomes. Any marginal demand for MANA would cause an increase in the MANA price, leading to an appreciation of the token."
+        "What happens with the MANA burned?",
+        "It gets taken out of circulation, and nobody can use it"
       )}
       <Grid.Column width={16}>
         <Card fluid>
